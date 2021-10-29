@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: ghcr.io/thejaysmith/myfrontend:v1
+        image: prabormukherjee/dashboard-frontend:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
 ---
@@ -26,6 +27,6 @@ spec:
   selector:
     app: frontend
   ports:
-    - port: 8080
+    - port: 8082
       targetPort: 8080
   type: LoadBalancer
