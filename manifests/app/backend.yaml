@@ -3,35 +3,47 @@ kind: Deployment
 metadata:
   name: backend-app
   annotations:
-    "sidecar.jaegertracing.io/inject": "true"
+    sidecar.jaegertracing.io/inject: "true"
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /metrics
+    prometheus.io/port: backendport
+  labels:
+    name: backend
+    release: prometheus
 spec:
   replicas: 3
   selector:
     matchLabels:
       app: backend
-      release: prometheus
   template:
     metadata:
       labels:
         app: backend
-        release: prometheus
     spec:
       containers:
       - name: backend
         image: prabormukherjee/dashboard-backend:latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 8080
+        - name: backendport
+          containerPort: 8080
+          protocol: TCP
+        env:
+        - name: JAEGER_HOST
+          value: my-jaeger-tracing-agent.observability.svc.cluster.local
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: backend-service
+  labels:
+    app: backend
 spec:
   selector:
     app: backend
-    release: prometheus
   ports:
-    - port: 8081
+    - name: backend
+      protocol: TCP
+      port: 8081
       targetPort: 8080
   type: LoadBalancer
