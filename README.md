@@ -27,7 +27,7 @@ It is important to know why we want to measure certain metrics for our customer.
 * availability/uptime -> the fraction of the time that a service is usable
 * system throughput -> how many units of information a system can process in a given amount of time
 * error rate -> the frequency of errors
-* Traffic -> The amount of stress on a system from demand
+* traffic -> The amount of stress on a system from demand
 
 ## Create a Dashboard to measure our SLIs
 Create a dashboard to measure the uptime of the frontend and backend services We will also want to measure to measure 40x and 50x errors. Create a dashboard that show these values over a 24 hour period and take a screenshot.
@@ -35,6 +35,31 @@ Create a dashboard to measure the uptime of the frontend and backend services We
 
 ## Tracing our Flask App
 We will create a Jaeger span to measure the processes on the backend. Once you fill in the span, provide a screenshot of it here.
+```python
+# jaeger
+def config_tracer():
+    config = Config(
+           config = {
+                'sampler': {
+                'type': 'const',
+                'param': 1,
+            },
+            'logging': True,
+        },
+        service_name="service_backend",
+        validate=True,
+        metrics_factory=PrometheusMetricsFactory(service_name_label="service_backend")
+    )
+    return config.initialize_tracer()
+
+
+app = Flask(__name__)
+metrics = GunicornInternalPrometheusMetrics(app)
+CORS(app)
+
+jaeger_tracer = config_tracer()
+tracing = FlaskTracing(jaeger_tracer, True, app)
+```
 ![jaeger_trace](./answer-img/jaeger-ui.png)
 
 ## Jaeger in Dashboards
@@ -46,17 +71,17 @@ Using the template below, write a trouble ticket for the developers, to explain 
 
 TROUBLE TICKET
 
-Name: Trial apps not working
+Name: `POST` to `/star` throw `500` error
 
-Date: 12-11-2021
+Date: 12-11-2021 at 17:57
 
-Subject: Trial button not working from frontend
+Subject: Can't POST to the /star endpoint 
 
-Affected Area: Frondend and trial apps
+Affected Area: `"./reference-app/backend/app/app.py", line 61`
 
 Severity: High
 
-Description: Button with triggers the trial app, isn't working properly and resulting 500 `Internal Server Error`
+Description: `TypeError:'NoneType' object is not subscriptable`
 
 
 ## Creating SLIs and SLOs
@@ -64,13 +89,23 @@ We want to create an SLO guaranteeing that our application has a 99.95% uptime p
 * Uptime > 99.9%
 * latency < 50ms
 * error rate < 0.3%
+* CPU and Memory usage is moderate
 
 ## Building KPIs for our plan
 Now that we have our SLIs and SLOs, create KPIs to accurately measure these metrics. We will make a dashboard for this, but first write them down here.
-* Uptime for backend, frontend, trial app services > 99.9%
-* Latency for HTTP < 50ms
-* Error rate (40x, 50x) < 0.3%
-* CPU and Memory usage is moderate
+* Uptime ->
+  + Amount of time the application is live
+  + It is very important to have an application with high uptime, so that user will not face problem
+  + It includes the uptime of Front-end, Back-end and Trial uptime
+* Latency ->
+  + The time it takes for a request to be served by an application, often measured in millisecond
+  + It is very important to keep track of successful and fail(error) response to requests
+* Error rate ->
+  + Number of HTTP error caused by application to total number of HTTP response
+  + We need to ensure the application has a very low error rate
+* CPU and Memory usage ->
+  + Amount of CPU and Memory used by the application
+  + We need to ensure CPU or Memory usage not more than 75%, otherwise it can have bad impact on the application 
 
 ## Final Dashboard
 Create a Dashboard containing graphs that capture all the metrics of your KPIs and adequately representing your SLIs and SLOs. Include a screenshot of the dashboard here, and write a text description of what graphs are represented in the dashboard.
